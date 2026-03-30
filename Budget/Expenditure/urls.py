@@ -8,5 +8,5 @@ router.register('items',ManageItemsView, basename='items' ) #This statement regi
 
 urlpatterns = [
     path("items/", ItemsView.as_view()),#This is the structure of the url for a class based view
-    path("manage_items/<int:pk>/", include(router.urls)) #This is the url to the router and its view. 
+    path('manage/', include(router.urls)) #This is the url to the router and its view. 
 ]
