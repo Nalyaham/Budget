@@ -5,6 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import ItemsSerializer, DateSerializer, ExpenditureSerializer
 from rest_framework import viewsets
+from django.shortcuts import render
+
+def frontend(request):
+    return render(request, 'your_app/index.html')
 
 class ItemsView(APIView): # This view is used to create and list out items in the budget.
     

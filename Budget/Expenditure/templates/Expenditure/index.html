@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budget Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0ede8;
+      --border: rgba(0,0,0,0.1);
+      --text-primary: #1a1a1a;
+      --text-secondary: #666;
+      --text-tertiary: #999;
+      --accent: #1a1a1a;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'DM Mono', 'Fira Mono', monospace;
+      --success-bg: #eaf3de; --success-text: #3b6d11;
+      --error-bg: #fcebeb; --error-text: #a32d2d;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141414;
+        --surface: #1e1e1e;
+        --surface2: #2a2a2a;
+        --border: rgba(255,255,255,0.1);
+        --text-primary: #f0ede6;
+        --text-secondary: #aaa;
+        --text-tertiary: #666;
+        --success-bg: #173404; --success-text: #c0dd97;
+        --error-bg: #501313; --error-text: #f09595;
+      }
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .page-header {
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .layout {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 640px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .panel-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      margin-top: 10px;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    input, select {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      padding: 8px 10px;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface2);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--text-secondary);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+
+    input::placeholder { color: var(--text-tertiary); }
+
+    .btn {
+      width: 100%;
+      margin-top: 14px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      border: none;
+      background: var(--text-primary);
+      color: var(--surface);
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .toast {
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: var(--radius-md);
+      display: none;
+    }
+
+    .toast.ok { background: var(--success-bg); color: var(--success-text); display: block; }
+    .toast.err { background: var(--error-bg); color: var(--error-text); display: block; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .refresh-btn {
+      font-size: 12px;
+      font-family: var(--font-sans);
+      background: none;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .refresh-btn:hover { background: var(--surface2); }
+
+    .summary-card { display: none; }
+
+    .total-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .total-label { font-size: 12px; color: var(--text-secondary); }
+
+    .total-amt {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .total-bar {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .total-bar-seg {
+      height: 100%;
+      transition: width 0.4s ease;
+    }
+
+    .cat-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .cat-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .ledger-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .ledger-row:last-child { border-bottom: none; }
+
+    .cat-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .date-lbl { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+
+    .amount {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      margin-left: auto;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2.5rem 0;
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Budget Tracker</h1>
+    <p>Add spending categories and log what you spend.</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Left column: forms -->
+    <div>
+      <p class="panel-label">Add item</p>
+      <div class="card">
+        <label for="cat-input">Category name</label>
+        <input id="cat-input" type="text" placeholder="e.g. Rent, Food, Transport" />
+        <button class="btn" id="add-item-btn" onclick="addItem()">Add item</button>
+        <div class="toast" id="item-toast"></div>
+      </div>
+
+      <p class="panel-label" style="margin-top: 16px;">Log spending</p>
+      <div class="card">
+        <label for="item-select">Item</label>
+        <select id="item-select">
+          <option value="">— select item —</option>
+        </select>
+        <label for="amount-input">Amount</label>
+        <input id="amount-input" type="number" min="0" placeholder="0" />
+        <button class="btn" id="add-exp-btn" onclick="addExpenditure()">Log spending</button>
+        <div class="toast" id="exp-toast"></div>
+      </div>
+    </div>
+
+    <!-- Right column: ledger -->
+    <div>
+      <div class="section-header">
+        <p class="panel-label" style="margin-bottom:0">Spending ledger</p>
+        <button class="refresh-btn" onclick="loadAll()">
+          <i class="ti ti-refresh" aria-hidden="true"></i> Refresh
+        </button>
+      </div>
+
+      <div class="card summary-card" id="summary-card">
+        <div class="total-row">
+          <span class="total-label">Total spent</span>
+          <span class="total-amt" id="total-amt">0</span>
+        </div>
+        <div class="total-bar" id="total-bar"></div>
+        <div class="cat-legend" id="cat-legend"></div>
+      </div>
+
+      <div class="card" id="ledger-card">
+        <div class="empty" id="ledger-empty">
+          <i class="ti ti-receipt" style="font-size:28px;display:block;margin-bottom:8px" aria-hidden="true"></i>
+          No entries yet
+        </div>
+        <div id="ledger-list"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── CONFIG ─────────────────────────────────────────────────────────
+    // If this file is served by Django (in templates/), leave BASE as ''.
+    // If running separately (e.g. live server on a different port),
+    // set BASE to your Django server address, e.g. 'http://127.0.0.1:8000'
+    const BASE = 'http://127.0.0.1:8000';
+    // ───────────────────────────────────────────────────────────────────
+
+    const CAT_COLORS = ['#378ADD','#1D9E75','#BA7517','#D85A30','#D4537E','#7F77DD','#639922','#E24B4A'];
+    const CAT_BG     = ['#E6F1FB','#E1F5EE','#FAEEDA','#FAECE7','#FBEAF0','#EEEDFE','#EAF3DE','#FCEBEB'];
+
+    let items = [];
+    let expenditures = [];
+    let colorMap = {};
+    let colorIdx = 0;
+
+    function getColor(cat, bg = false) {
+      if (colorMap[cat] === undefined) { colorMap[cat] = colorIdx++ % CAT_COLORS.length; }
+      return bg ? CAT_BG[colorMap[cat]] : CAT_COLORS[colorMap[cat]];
+    }
+
+    async function apiFetch(path, opts = {}) {
+      const res = await fetch(BASE + path, {
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        ...opts
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : '';
+    }
+
+    async function loadItems() {
+      try {
+        items = await apiFetch('/items/');
+        const sel = document.getElementById('item-select');
+        sel.innerHTML = '<option value="">— select item —</option>';
+        items.forEach(it => {
+          const opt = document.createElement('option');
+          opt.value = it.id;
+          opt.textContent = it.Category;
+          sel.appendChild(opt);
+        });
+      } catch (e) { console.warn('items load failed:', e.message); }
+    }
+
+    async function loadExpenditures() {
+      try {
+        expenditures = await apiFetch('/Expenditure/');
+        renderLedger();
+      } catch (e) { console.warn('expenditures load failed:', e.message); }
+    }
+
+    async function loadAll() { await loadItems(); await loadExpenditures(); }
+
+    function renderLedger() {
+      const list = document.getElementById('ledger-list');
+      const empty = document.getElementById('ledger-empty');
+      const summaryCard = document.getElementById('summary-card');
+      list.innerHTML = '';
+
+      if (!expenditures.length) {
+        empty.style.display = 'block';
+        summaryCard.style.display = 'none';
+        return;
+      }
+
+      empty.style.display = 'none';
+      summaryCard.style.display = 'block';
+
+      const catTotals = {};
+      let grand = 0;
+      expenditures.forEach(e => {
+        const item = items.find(i => i.id == e.Item);
+        const cat = item ? item.Category : `Item #${e.Item}`;
+        catTotals[cat] = (catTotals[cat] || 0) + (e.Spent || 0);
+        grand += (e.Spent || 0);
+      });
+
+      document.getElementById('total-amt').textContent = grand.toLocaleString();
+
+      const bar = document.getElementById('total-bar');
+      const legend = document.getElementById('cat-legend');
+      bar.innerHTML = '';
+      legend.innerHTML = '';
+
+      Object.entries(catTotals).sort((a, b) => b[1] - a[1]).forEach(([cat, amt]) => {
+        const pct = grand ? (amt / grand * 100).toFixed(1) : 0;
+        const seg = document.createElement('div');
+        seg.className = 'total-bar-seg';
+        seg.style.cssText = `width:${pct}%;background:${getColor(cat)};`;
+        bar.appendChild(seg);
+
+        const li = document.createElement('div');
+        li.className = 'cat-legend-item';
+        li.innerHTML = `<span class="cat-dot" style="background:${getColor(cat)}"></span>${cat} <span style="font-family:var(--font-mono);font-size:11px">${amt.toLocaleString()}</span>`;
+        legend.appendChild(li);
+      });
+
+      const sorted = [...expenditures].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      sorted.forEach(e => {
+        const item = items.find(i => i.id == e.Item);
+        const cat = item ? item.Category : `Item #${e.Item}`;
+        const row = document.createElement('div');
+        row.className = 'ledger-row';
+        row.innerHTML = `
+          <span class="cat-pill" style="background:${getColor(cat, true)};color:${getColor(cat)}">${cat}</span>
+          <span class="date-lbl">${e.date || ''}</span>
+          <span class="amount">${(e.Spent || 0).toLocaleString()}</span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function showToast(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `toast ${type}`;
+      setTimeout(() => { el.className = 'toast'; }, 3000);
+    }
+
+    async function addItem() {
+      const input = document.getElementById('cat-input');
+      const btn = document.getElementById('add-item-btn');
+      const cat = input.value.trim();
+      if (!cat) return;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Adding…';
+      try {
+        await apiFetch('/items/', { method: 'POST', body: JSON.stringify({ Category: cat }) });
+        showToast('item-toast', `"${cat}" added`, 'ok');
+        input.value = '';
+        await loadItems();
+      } catch (e) { showToast('item-toast', 'Error: ' + e.message, 'err'); }
+      btn.disabled = false;
+      btn.textContent = 'Add item';
+    }
+
+    async function addExpenditure() {
+      const sel = document.getElementById('item-select');
+      const amt = document.getElementById('amount-input');
+      const btn = document.getElementById('add-exp-btn');
+      if (!sel.value || !amt.value) return;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Saving…';
+      try {
+        await apiFetch('/Expenditure/', {
+          method: 'POST',
+          body: JSON.stringify({ Item: parseInt(sel.value), Spent: parseInt(amt.value) })
+        });
+        showToast('exp-toast', 'Spending logged', 'ok');
+        amt.value = '';
+        await loadExpenditures();
+      } catch (e) { showToast('exp-toast', 'Error: ' + e.message, 'err'); }
+      btn.disabled = false;
+      btn.textContent = 'Log spending';
+    }
+
+    loadAll();
+  </script>
+
+</body>
+</html>
