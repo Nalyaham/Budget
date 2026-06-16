@@ -231,6 +231,44 @@
 
     .ledger-row:last-child { border-bottom: none; }
 
+    .ledger-row.editing { flex-wrap: wrap; }
+
+    .row-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      width: 26px; height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface2);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity 0.15s;
+    }
+
+    .icon-btn:hover { opacity: 0.7; }
+    .icon-btn.danger:hover { color: var(--error-text); }
+
+    .edit-amount {
+      width: 90px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 5px 8px;
+    }
+
+    .edit-date {
+      font-size: 12px;
+      padding: 5px 8px;
+      max-width: 130px;
+    }
+
     .cat-pill {
       font-size: 11px;
       font-weight: 500;
@@ -442,13 +480,64 @@
         const cat = item ? item.Category : `Item #${e.Item}`;
         const row = document.createElement('div');
         row.className = 'ledger-row';
+        row.dataset.id = e.id;
         row.innerHTML = `
           <span class="cat-pill" style="background:${getColor(cat, true)};color:${getColor(cat)}">${cat}</span>
           <span class="date-lbl">${e.date || ''}</span>
           <span class="amount">${(e.Spent || 0).toLocaleString()}</span>
+          <span class="row-actions">
+            <button class="icon-btn" title="Edit" onclick="startEditExpenditure(${e.id})"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+            <button class="icon-btn danger" title="Delete" onclick="deleteExpenditure(${e.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </span>
         `;
         list.appendChild(row);
       });
+    }
+
+    function startEditExpenditure(id) {
+      const e = expenditures.find(x => x.id == id);
+      if (!e) return;
+      const row = document.querySelector(`.ledger-row[data-id="${id}"]`);
+      if (!row) return;
+      const item = items.find(i => i.id == e.Item);
+      const cat = item ? item.Category : `Item #${e.Item}`;
+      row.classList.add('editing');
+      row.innerHTML = `
+        <span class="cat-pill" style="background:${getColor(cat, true)};color:${getColor(cat)}">${cat}</span>
+        <input type="date" class="edit-date" id="edit-date-${id}" value="${e.date || ''}" />
+        <input type="number" min="0" class="edit-amount" id="edit-amount-${id}" value="${e.Spent || 0}" />
+        <span class="row-actions">
+          <button class="icon-btn" title="Save" onclick="saveEditExpenditure(${id})"><i class="ti ti-check" aria-hidden="true"></i></button>
+          <button class="icon-btn" title="Cancel" onclick="renderLedger()"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </span>
+      `;
+    }
+
+    async function saveEditExpenditure(id) {
+      const amtInput = document.getElementById(`edit-amount-${id}`);
+      const dateInput = document.getElementById(`edit-date-${id}`);
+      const amt = parseInt(amtInput.value);
+      const date = dateInput.value;
+      if (!amt || !date) return;
+      try {
+        await apiFetch(`/manage_spent/spent/${id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ Spent: amt, date: date })
+        });
+        await loadExpenditures();
+      } catch (err) {
+        showToast('exp-toast', 'Update failed: ' + err.message, 'err');
+      }
+    }
+
+    async function deleteExpenditure(id) {
+      if (!confirm('Delete this entry?')) return;
+      try {
+        await apiFetch(`/manage_spent/spent/${id}/`, { method: 'DELETE' });
+        await loadExpenditures();
+      } catch (err) {
+        showToast('exp-toast', 'Delete failed: ' + err.message, 'err');
+      }
     }
 
     function showToast(id, msg, type) {
