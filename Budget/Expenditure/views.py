@@ -8,7 +8,7 @@ from rest_framework import viewsets
 from django.shortcuts import render
 
 def frontend(request):
-    return render(request, 'Expenditure/templates/Expenditure/index.html')
+    return render(request, 'Expenditure/index.html')
 
 class ItemsView(APIView): # This view is used to create and list out items in the budget.
     
