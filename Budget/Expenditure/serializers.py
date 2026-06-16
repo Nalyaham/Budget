@@ -11,7 +11,7 @@ class ExpenditureSerializer(serializers.ModelSerializer): #This is the serialize
 
     class Meta:
         model = expenditure
-        fields = ['Spent', 'Item', 'Categories', 'date']
+        fields = ['id', 'Spent', 'Item', 'Categories', 'date']
 
 class DateSerializer(serializers.ModelSerializer): #This is the serializer for the date of expenditure
     Categories = ItemsSerializer(many=True, read_only = True)
