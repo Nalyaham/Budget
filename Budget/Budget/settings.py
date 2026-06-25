@@ -28,7 +28,8 @@ SECRET_KEY = "django-insecure-#o^5sb+hp28zo5$3sj)col*+z$p&x_=ym-75%!j^+cb-nw+0sw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['budget-pttf.onrender.com']
+ALLOWED_HOSTS = ['budget-pttf.onrender.com', 
+                 '127.0.0.1', 'localhost' ]
 
 
 # Application definition
@@ -80,7 +81,11 @@ WSGI_APPLICATION = "Budget.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
+    'default':{
+        'ENGINE':'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'render': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
     )
