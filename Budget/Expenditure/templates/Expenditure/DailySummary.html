@@ -1,0 +1,6 @@
+<h1>
+    Daily Summary
+</h1>
+{% for item in daily_totals %}
+    <p> {{item.day}} : {{item.total}}</p>
+{% endfor %}
