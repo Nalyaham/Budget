@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from .serializers import ItemsSerializer, DateSerializer, ExpenditureSerializer
 from rest_framework import viewsets
 from django.shortcuts import render
+from datetime import date, timedelta
+from django.db.models import Sum
 
 def frontend(request):
     return render(request, 'Expenditure/index.html')
@@ -49,4 +51,23 @@ class ExpenditureView(APIView): #This view lists and creates money spent on an i
 class ManageExpeditureView(viewsets.ModelViewSet): #This view deletes, updates and views money spent on a specific item
     queryset = expenditure.objects.all()
     serializer_class = ExpenditureSerializer
+
+def DailySummary(request):
+    today = date.today() 
+    monday = today - timedelta(days = today.weekday())
+
+    daily_totals = []
+
+    for i in range(7):
+        day = monday + timedelta(days = i)
+        total = expenditure.objects.filter(date = day).aggregate(total = Sum('Spent'))['total'] or 0
+
+        daily_totals.append({
+            'day': day, 
+            'total': total
+        })
+
+    context = {"daily_totals": daily_totals}
+
+    return render(request, 'Expenditure/DailySummary.html' , context)
     
