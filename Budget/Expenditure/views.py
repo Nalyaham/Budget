@@ -52,9 +52,10 @@ class ManageExpeditureView(viewsets.ModelViewSet): #This view deletes, updates a
     queryset = expenditure.objects.all()
     serializer_class = ExpenditureSerializer
 
-def DailySummary(request):
+def DailySummary(request): # This is a function based view that returns the amount of money spent in a day
     today = date.today() 
-    monday = today - timedelta(days = today.weekday())
+    monday = today - timedelta(days = today.weekday()) # Timedelta enables the addition or suntraction of time
+    # Above, today.weekday returns the current day in integer form and timedelta subtracts those days from the current day to return to Monday. 
 
     daily_totals = []
 
@@ -67,7 +68,11 @@ def DailySummary(request):
             'total': total
         })
 
-    context = {"daily_totals": daily_totals}
+    weekly_total = sum(day_dic['total'] for day_dic in daily_totals) # This is a loop through the dictionaries in the list daily_totals
+    # In each dictionary, only the total key is selected using day_dic['total']
+
+    context = {"daily_totals": daily_totals,
+               "weekly_total": weekly_total}
 
     return render(request, 'Expenditure/DailySummary.html' , context)
     
